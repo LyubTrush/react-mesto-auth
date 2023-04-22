@@ -11,12 +11,16 @@ export default function Header(props) {
   const handleBurgOut = () => {
     handleOpenMenu();
     props.logOut();
-  }
+  };
 
   //меню при брекпойнте мобильной версии
   return (
     <>
-      <HeaderNavBurger email={props.email} toogle={nav} onClickOut={handleBurgOut}/>
+      <HeaderNavBurger
+        email={props.email}
+        toogle={nav}
+        onClickOut={handleBurgOut}
+      />
       <div className="header">
         <div className="header__logo"></div>
 
@@ -37,7 +41,17 @@ export default function Header(props) {
               </Link>
             }
           />
-          <Route path="/" element={<HeaderNav email={props.email} toogle={nav} onClickMenu={handleOpenMenu} logOut={props.logOut}/>} />
+          <Route
+            path="/"
+            element={
+              <HeaderNav
+                email={props.email}
+                toogle={nav}
+                onClickMenu={handleOpenMenu}
+                logOut={props.logOut}
+              />
+            }
+          />
         </Routes>
       </div>
     </>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 
-
 import Header from "./Header.js";
 import Footer from "./Footer.js";
 import Main from "./Main.js";
@@ -34,27 +33,29 @@ function App() {
   const [infoTooltip, setInfoTooltip] = useState(false);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
-  
+
   //пользователь
   const [currentUser, setCurrentUser] = useState({});
 
   //эффект получения информации о пользователе и
   useEffect(() => {
-    api
-      .getUserInfo()
-      .then(setCurrentUser)
-      .catch((err) => {
-        console.log(err);
-      });
-    api
-      .getInitialCards()
-      .then((res) => {
-        setCards(res);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+    if (loggedIn) {
+      api
+        .getUserInfo()
+        .then(setCurrentUser)
+        .catch((err) => {
+          console.log(err);
+        });
+      api
+        .getInitialCards()
+        .then((res) => {
+          setCards(res);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [loggedIn]);
 
   // функции обработчики открытия попапов
   const handleEditAvatarClick = () => {
@@ -75,7 +76,7 @@ function App() {
 
   function handleInfoTooltip() {
     setInfoTooltip(true);
-  };
+  }
 
   function handleCardLike(card) {
     // Снова проверяем, есть ли уже лайк на этой карточке
@@ -93,43 +94,73 @@ function App() {
         console.log(err);
       });
   }
-// обработчик регистрации
-const handleSignup = React.useCallback((email, password) => {
-  auth
-    .register(email, password)
-    .then(() => {
-      setPopupImage(yes);
-      setRegisterMessage("Вы успешно зарегистрировались!");
-      navigate("/");
-    })
-    .catch(() => {
-      setPopupImage(no);
-      setRegisterMessage("Что-то пошло не так! Попробуйте ещё раз.");
-    }).finally(handleInfoTooltip);
-}, [navigate])
+  // обработчик регистрации
+  const handleSignup = React.useCallback(
+    (email, password) => {
+      auth
+        .register(email, password)
+        .then(() => {
+          setPopupImage(yes);
+          setRegisterMessage("Вы успешно зарегистрировались!");
+          navigate("/");
+        })
+        .catch(() => {
+          setPopupImage(no);
+          setRegisterMessage("Что-то пошло не так! Попробуйте ещё раз.");
+        })
+        .finally(handleInfoTooltip);
+    },
+    [navigate]
+  );
 
-// обработчик авторизации
-const handleSignin = React.useCallback((email, password) => {
-  auth
-    .signin(email, password)
-    .then((response) => {
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        setEmail(email);
-        setLoggedIn(true);
-        navigate("/");
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-},[navigate])
+  // обработчик авторизации
+  const handleSignin = React.useCallback(
+    (email, password) => {
+      auth
+        .signin(email, password)
+        .then((response) => {
+          if (response.token) {
+            localStorage.setItem("token", response.token);
+            setEmail(email);
+            setLoggedIn(true);
+            navigate("/");
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          setPopupImage(no);
+          setRegisterMessage("Что-то пошло не так! Попробуйте ещё раз.");
+          handleInfoTooltip();
+        });
+    },
+    [navigate]
+  );
 
-function handleLogOut() {
-  localStorage.removeItem('token');
-  setEmail("");
-  setLoggedIn(false);
-}
+  function handleLogOut() {
+    localStorage.removeItem("token");
+    setEmail("");
+    setLoggedIn(false);
+  }
+
+  const checkAuthorisation = React.useCallback(() => {
+    const token = localStorage.getItem("token");
+    token &&
+      auth
+        .checkAuth(token)
+        .then((response) => {
+          setEmail(response.data.email);
+          setLoggedIn(true);
+          navigate("/");
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+  }, [navigate]);
+
+  //проверка авторизации
+  useEffect(() => {
+    checkAuthorisation();
+  }, [checkAuthorisation]);
 
   function handleCardDelete(card) {
     api
@@ -194,60 +225,78 @@ function handleLogOut() {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header email={email} logOut={handleLogOut}/>
+        <Header email={email} logOut={handleLogOut} />
         <Routes>
-          <Route path='/' element={<ProtectedRoute 
-          element={Main}
-          loggedIn={loggedIn}          
-          onEditProfile={handleEditProfileClick}
-          onAddPlace={handleAddPlaceClick}
-          onEditAvatar={handleEditAvatarClick}
-          onCardClick={handleCardClick}
-          cards={cards}
-          onCardLike={handleCardLike}
-          onCardDelete={handleCardDelete}
-          />}/>
-          <Route path='/signup' element={<Register handleRegisterMessage={handleRegisterMessage} onSubmit={handleSignup}/>}/>
-          <Route path='/signin' element={<Login handleRegisterMessage={handleRegisterMessage} onSubmit={handleSignin}/>}/>
-          
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute
+                element={Main}
+                loggedIn={loggedIn}
+                onEditProfile={handleEditProfileClick}
+                onAddPlace={handleAddPlaceClick}
+                onEditAvatar={handleEditAvatarClick}
+                onCardClick={handleCardClick}
+                cards={cards}
+                onCardLike={handleCardLike}
+                onCardDelete={handleCardDelete}
+              />
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <Register
+                handleRegisterMessage={handleRegisterMessage}
+                onSubmit={handleSignup}
+              />
+            }
+          />
+          <Route
+            path="/signin"
+            element={
+              <Login
+                handleRegisterMessage={handleRegisterMessage}
+                onSubmit={handleSignin}
+              />
+            }
+          />
         </Routes>
         <Footer />
-        //попап смены аватара
-        <EditAvatarPopup
-          isOpen={isEditAvatarPopupOpen}
-          onClose={closeAllPopups}
-          onUpdateAvatar={handleUpdateAvatar}
-        />
-        //попап редактирования профиля
-        <EditProfilePopup
-          isOpen={isEditProfilePopupOpen}
-          onClose={closeAllPopups}
-          onUpdateUser={handleUpdateUser}
-        />
-        //попап добавления фото
-        <AddPlacePopup
-          isOpen={isAddPlacePopupOpen}
-          onClose={closeAllPopups}
-          onAddPlace={handleAddPlaceSubmit}
-        />
-        //попап подтверждения удаления фото
-        <PopupWithForm
-          name={"delete-photo"}
-          title={"Вы уверены?"}
-          submitText={"Да"}
-        />
-        // попап просмотра фото
-        <ImagePopup card={selectedCard} onClose={closeAllPopups} />
-        // попап ошибки решистрации
-        <ToolTip 
-            image={popupImage} 
-            title={registerMessage} 
-            isOpen={infoTooltip} 
-            onClose={closeAllPopups} 
-          />
-        
       </div>
-     
+
+      <EditAvatarPopup
+        isOpen={isEditAvatarPopupOpen}
+        onClose={closeAllPopups}
+        onUpdateAvatar={handleUpdateAvatar}
+      />
+
+      <EditProfilePopup
+        isOpen={isEditProfilePopupOpen}
+        onClose={closeAllPopups}
+        onUpdateUser={handleUpdateUser}
+      />
+
+      <AddPlacePopup
+        isOpen={isAddPlacePopupOpen}
+        onClose={closeAllPopups}
+        onAddPlace={handleAddPlaceSubmit}
+      />
+
+      <PopupWithForm
+        name={"delete-photo"}
+        title={"Вы уверены?"}
+        submitText={"Да"}
+      />
+
+      <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+
+      <ToolTip
+        image={popupImage}
+        title={registerMessage}
+        isOpen={infoTooltip}
+        onClose={closeAllPopups}
+      />
     </CurrentUserContext.Provider>
   );
 }

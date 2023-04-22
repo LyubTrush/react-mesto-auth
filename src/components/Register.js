@@ -1,10 +1,9 @@
 //компонент регистрации пользователя с необходимыми стейт-переменными.
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Register({ onSubmit }) {
-  const [formValue, setFormValue] = React.useState({ email: "", password: "" });
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
@@ -53,25 +52,3 @@ export default function Register({ onSubmit }) {
     </div>
   );
 }
-
-/*function handleChange(e) {
-    const { name, value } = e.target;
-    setFormValue({
-      ...formValue,
-      [name]: value,
-    });
-  }*/
-
-/*function handleSubmit(e) {
-    e.preventDefault();
-    auth
-    .register(formValue)
-    .then((data) => {
-      console.log(data)
-        //props.handleRegisterMessage({
-         //   text: "Вы успешно зарегистрировались!",
-         //   isSuccess: true,
-      //  })
-      //  navigate("/signin");
-    })
-  }*/

@@ -13,22 +13,26 @@ export const register = (email, password) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify( email, password ),
-  })
-  .then(handleRes)
+    body: JSON.stringify(email, password),
+  }).then(handleRes);
 };
 
 export const signin = (email, password) => {
-  console.log(email, password);
   return fetch(`${BASE_AUTH_URL}/signin`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
   }).then(handleRes);
 };
 
-export const checkAuth = () => {
-  
-}
+export const checkAuth = (token) => {
+  return fetch(`${BASE_AUTH_URL}/users/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  }).then(handleRes);
+};
